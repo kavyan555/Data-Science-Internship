@@ -32,7 +32,7 @@ if st.button("Submit"):
 # CHECKBOX SHOW/HIDE 
 
 if st.checkbox("Show Secret Message"):
-    st.write("Welcome to Streamlit 😌")
+    st.write("Welcome to Streamlit ")
 
 #  SELECTBOX 
 st.header("Programming Language Selection")

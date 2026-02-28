@@ -2,131 +2,131 @@ import dash
 from dash import dcc, html, Input, Output
 import plotly.express as px
 import pandas as pd
+import seaborn as sns
 
-# Load Dataset
-df = px.data.tips()
+df = sns.load_dataset("tips")
+df["tip_percent"] = (df["tip"] / df["total_bill"]) * 100
 
-# Prep
-df['tip_pct'] = (df['tip'] / df['total_bill']) * 100
-
-# Initialize
 app = dash.Dash(__name__)
-app.title = "RESTAURANT DASHBOARD"
+app.title = "Restaurant Dashboard"
 
-# Layout
 app.layout = html.Div([
 
-    html.H1("RESTAURANT ANALYTICS DASHBOARD", style={'textAlign': 'center'}),
+    html.H1("Restaurant Business Dashboard", style={'textAlign':'center'}),
 
+    # FILTERS
     html.Div([
 
         dcc.Dropdown(
-            id='day-dropdown',
+            id='day-filter',
             options=[{'label': d, 'value': d} for d in df['day'].unique()],
-            value=df['day'].unique(),
             multi=True,
-            placeholder="Select Day(s)",
-            style={'width': '40%', 'display': 'inline-block'}
+            placeholder="Select Day"
         ),
 
         dcc.Dropdown(
-            id='time-dropdown',
+            id='time-filter',
             options=[{'label': t, 'value': t} for t in df['time'].unique()],
-            value=df['time'].unique(),
             multi=True,
-            placeholder="Select Time(s)",
-            style={'width': '40%', 'display': 'inline-block', 'marginLeft': '5%'}
+            placeholder="Select Time"
         )
 
-    ]),
+    ], style={'display':'flex','gap':'20px','padding':'10px'}),
 
-    html.Br(),
+    # KPI CARDS
+    html.Div(id='kpis', style={
+        'display':'flex',
+        'justifyContent':'space-around',
+        'padding':'10px'
+    }),
 
-    html.Div(
-        id='kpi-card',
-        style={
-            'padding': '20px',
-            'backgroundColor': '#f4f4f4',
-            'width': '35%',
-            'textAlign': 'center',
-            'fontSize': '18px',
-            'borderRadius': '10px',
-            'margin': 'auto'
-        }
-    ),
+    # ROW 1
+    html.Div([
+        dcc.Graph(id='rev-day', style={'width':'33%'}),
+        dcc.Graph(id='rev-time', style={'width':'33%'}),
+        dcc.Graph(id='smoking', style={'width':'33%'})
+    ], style={'display':'flex'}),
 
-    html.Br(),
+    # ROW 2
+    html.Div([
+        dcc.Graph(id='tip-dist', style={'width':'33%'}),
+        dcc.Graph(id='bill-tip', style={'width':'33%'}),
+        dcc.Graph(id='rev-gender', style={'width':'33%'})
+    ], style={'display':'flex'}),
 
-    dcc.Graph(id='rev-day'),
-    dcc.Graph(id='rev-time'),
-    dcc.Graph(id='tip-dist'),
-    dcc.Graph(id='bill-vs-tip'),
-    dcc.Graph(id='rev-gender'),
-    dcc.Graph(id='rev-size'),
-    dcc.Graph(id='day-time')
+    # ROW 3
+    html.Div([
+        dcc.Graph(id='rev-size', style={'width':'50%'}),
+        dcc.Graph(id='day-time', style={'width':'50%'})
+    ], style={'display':'flex'})
 
 ])
 
-
-# Callback
 @app.callback(
-    Output('rev-day', 'figure'),
-    Output('rev-time', 'figure'),
-    Output('tip-dist', 'figure'),
-    Output('bill-vs-tip', 'figure'),
-    Output('rev-gender', 'figure'),
-    Output('rev-size', 'figure'),
-    Output('day-time', 'figure'),
-    Output('kpi-card', 'children'),
-    Input('day-dropdown', 'value'),
-    Input('time-dropdown', 'value')
+    Output('kpis','children'),
+    Output('rev-day','figure'),
+    Output('rev-time','figure'),
+    Output('smoking','figure'),
+    Output('tip-dist','figure'),
+    Output('bill-tip','figure'),
+    Output('rev-gender','figure'),
+    Output('rev-size','figure'),
+    Output('day-time','figure'),
+    Input('day-filter','value'),
+    Input('time-filter','value')
 )
+def update_dashboard(days, times):
 
-def update_dashboard(selected_days, selected_times):
+    filtered = df.copy()
 
-    filtered = df[
-        (df['day'].isin(selected_days)) &
-        (df['time'].isin(selected_times))
+    if days:
+        filtered = filtered[filtered["day"].isin(days)]
+
+    if times:
+        filtered = filtered[filtered["time"].isin(times)]
+
+    total_revenue = filtered["total_bill"].sum()
+    total_tips = filtered["tip"].sum()
+    avg_tip_percent = filtered["tip_percent"].mean()
+    avg_bill = filtered["total_bill"].mean()
+    peak_day = filtered.groupby("day")["total_bill"].sum().idxmax()
+
+    kpis = [
+        html.Div(f"Revenue: ${total_revenue:.2f}"),
+        html.Div(f"Tips: ${total_tips:.2f}"),
+        html.Div(f"Avg Tip %: {avg_tip_percent:.2f}%"),
+        html.Div(f"Avg Bill: ${avg_bill:.2f}"),
+        html.Div(f"Peak Day: {peak_day}")
     ]
 
-    # SAFE KPIs
-    if len(filtered) == 0:
-        return {}, {}, {}, {}, {}, {}, {}, "No Data for Selected Filters"
+    rev_day = px.bar(filtered.groupby("day")["total_bill"].sum().reset_index(),
+                     x="day", y="total_bill", title="Revenue by Day")
 
-    total_revenue = filtered['total_bill'].sum()
-    total_tips = filtered['tip'].sum()
-    avg_tip_pct = filtered['tip_pct'].mean()
-    avg_bill = filtered['total_bill'].mean()
+    rev_time = px.pie(filtered, names="time", values="total_bill",
+                      title="Revenue by Time")
 
-    peak_day = filtered.groupby('day')['total_bill'].sum().idxmax()
+    smoking = px.pie(filtered, names="smoker", values="total_bill",
+                     title="Smoking vs Non-Smoking")
 
-    kpi_text = html.Div([
-        html.H3(f"Total Revenue: {total_revenue:.2f}"),
-        html.H3(f"Total Tips: {total_tips:.2f}"),
-        html.H3(f"Avg Tip %: {avg_tip_pct:.2f}"),
-        html.H3(f"Avg Bill: {avg_bill:.2f}"),
-        html.H3(f"Peak Revenue Day: {peak_day}")
-    ])
+    tip_dist = px.histogram(filtered, x="tip_percent",
+                            title="Tip % Distribution")
 
-    # Charts
-    rev_day = px.bar(filtered, x='day', y='total_bill', title='Revenue by Day')
+    bill_tip = px.scatter(filtered, x="total_bill", y="tip",
+                          title="Bill vs Tip")
 
-    rev_time = px.bar(filtered, x='time', y='total_bill', title='Revenue by Time')
+    rev_gender = px.bar(filtered.groupby("sex")["total_bill"].sum().reset_index(),
+                        x="sex", y="total_bill",
+                        title="Revenue by Gender")
 
-    tip_dist = px.histogram(filtered, x='tip_pct', title='Tip % Distribution')
+    rev_size = px.bar(filtered.groupby("size")["total_bill"].sum().reset_index(),
+                      x="size", y="total_bill",
+                      title="Revenue by Size")
 
-    bill_tip = px.scatter(filtered, x='total_bill', y='tip', title='Total Bill vs Tip')
+    day_time = px.bar(filtered.groupby(["day","time"])["total_bill"].sum().reset_index(),
+                      x="day", y="total_bill", color="time",
+                      title="Day + Time Revenue")
 
-    rev_gender = px.bar(filtered, x='sex', y='total_bill', title='Revenue by Gender')
+    return kpis, rev_day, rev_time, smoking, tip_dist, bill_tip, rev_gender, rev_size, day_time
 
-    rev_size = px.bar(filtered, x='size', y='total_bill', title='Revenue by Size')
-
-    day_time = px.box(filtered, x='day', y='total_bill', color='time',
-                      title='Day + Time Revenue')
-
-    return rev_day, rev_time, tip_dist, bill_tip, rev_gender, rev_size, day_time, kpi_text
-
-
-# Run
 if __name__ == "__main__":
     app.run(debug=True)

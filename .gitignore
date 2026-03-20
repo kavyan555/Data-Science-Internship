@@ -6,5 +6,6 @@ venv/
 __pycache__/
 *.pyc
 
-# Ignore Excel runtime files (optional)
-*.xlsx
+# Ignore Excel runtime files
+
+*.csv

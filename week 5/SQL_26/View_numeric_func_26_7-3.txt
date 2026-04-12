@@ -1,0 +1,112 @@
+views:
+it is a virtual representation created with the help of select query
+
+we can easily solve the complex queries and also very cleaned data
+
+create view studentview as select name,address from students
+
+students:
+
+student_id,name,roll_no,course,email,address,phone_number
+
+select * from studentview
+
+select * from students
+
+
+select name, address from students(students)
+
+
+Aggregate functions:
+
+the functions which will combine values of a multiple rows to produce one result
+
+1.count:helps to count the number of rows
+2.sum:helps to add all the values in a column
+3.min:helps to show the min value in a column
+4.max:helps to show the max value in a column
+5.avg:helps to calculate the average value
+
+group by with aggregate functions:
+
+it is used to group rows and apply aggregate functions to
+each group
+
+departments:
+
+create table departments(dept_name varchar(20),salary int)
+
+select dept_name,avg(Salary) from departments groupby dept_name
+
+Aggregate functions with having:
+
+select dept_name,sum(salary)
+from departments
+group by dept_name
+having sum(slary)>50000
+
+it   40000
+it   55000
+it   35000
+finance  20000
+hr      15000
+
+
+sales table(20-25 rows)
+
+id
+product_name
+price
+
+sum,min,max,avg,count
+
+Amazon data(ecommerce analysis)
+
+1.total sales of the company
+2.total sales by product category
+3.number of orders per city
+4.average order value per customer
+5.highest spending customer
+6.maximum order value in each category
+7.cities with sales greater than 50000
+8.number of customers in each city
+9.category with most orders
+10.monthly sales
+
+
+numerical functions:
+it is mainly used to perform calculations on numerical values such as rounding the numbers,finding the absolute
+values,and square roots
+
+ceil---->round the number up to the nearest integer
+abs----->absolute value(positive)
+round--->rounds the number to the specified decimal places
+sqrt--->used to return the square root of number
+power---->getting the exponential values
+mod---->used to return the remainder
+exp--->returns a raised to the power of number
+
+select ceil(23.7) As Ceiiling_number
+select round(23.567887,2) as round_number
+select abs(-10) As absolute_value
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -13,3 +13,6 @@ __pycache__/
 .env
 
 *.pkl
+
+results/
+sentiment_model/

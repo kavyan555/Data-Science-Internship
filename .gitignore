@@ -16,3 +16,17 @@ __pycache__/
 
 results/
 sentiment_model/
+
+
+#  Dataset (large files)
+dataset/
+
+# Generated embeddings
+embeddings/
+
+# Model weights
+yolov8n.pt
+
+# System files
+.DS_Store
+Thumbs.db

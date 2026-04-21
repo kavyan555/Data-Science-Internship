@@ -2,7 +2,11 @@ import streamlit as st
 from transformers import pipeline, CLIPProcessor, CLIPModel
 from PIL import Image
 import torch
+import librosa
+import io
+import numpy as np
 
+# ---------------- LOAD MODELS ----------------
 @st.cache_resource
 def load_pipelines():
     return {
@@ -33,6 +37,7 @@ def load_clip():
 pipelines = load_pipelines()
 clip_model, clip_processor = load_clip()
 
+# ---------------- UI ----------------
 st.title("AI Playground with Transformers")
 
 task = st.sidebar.selectbox(
@@ -71,7 +76,8 @@ elif task == "Image Classification":
 
         if st.button("Classify"):
             result = pipelines["image_classifier"](image)
-            st.write(result[0]["label"])
+            st.write(f"Prediction: {result[0]['label']}")
+            st.write(f"Confidence: {result[0]['score']:.4f}")
 
 # ---------------- ASR ----------------
 elif task == "Automatic Speech Recognition":
@@ -80,6 +86,25 @@ elif task == "Automatic Speech Recognition":
     if uploaded_file is not None:
         st.audio(uploaded_file)
 
-        if st.button("Recognize"):
-            result = pipelines["asr"](uploaded_file)
-            st.write(result["text"])
+        if uploaded_file.size > 10 * 1024 * 1024:
+            st.warning("File too large (max 10MB)")
+        else:
+            if st.button("Recognize"):
+                with st.spinner("Transcribing..."):
+                    try:
+                        # Convert file → numpy array
+                        audio_bytes = uploaded_file.read()
+                        audio, sr = librosa.load(io.BytesIO(audio_bytes), sr=16000)
+
+                        # Convert stereo → mono
+                        if len(audio.shape) > 1:
+                            audio = np.mean(audio, axis=1)
+
+                        # Run ASR
+                        result = pipelines["asr"](audio)
+
+                        st.success("Transcription:")
+                        st.write(result["text"])
+
+                    except Exception as e:
+                        st.error(f"Error: {e}")

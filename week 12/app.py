@@ -81,7 +81,7 @@ def load_model():
 from pinecone import Pinecone, ServerlessSpec
  
 def init_pinecone():
-    pc = Pinecone(api_key="pcsk_7MLMCH_JoWqVu4cCuywhyuq152bUUba9b1bKqWCfuyjJYZmr8Dbed1D2REnVsNw6bCGyA2")
+    pc = Pinecone(api_key="pcsk_5HzujT_PUp7Kypqq7UPwCjENw8wD6cB6hma1iEist3ipuPbyWdVW1aixAkjZvxbNdbHwqF")
  
     index_name = "semantic-search-index"
  
